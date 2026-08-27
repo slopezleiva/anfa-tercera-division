@@ -209,7 +209,6 @@ window.App = (function () {
 
   /* ---------------- arranque ---------------- */
   function init() {
-    S.load();
     viewEl = document.getElementById('view');
     tabbar = document.querySelector('.tabbar');
     barraTorneo = document.getElementById('barraTorneo');
@@ -225,8 +224,10 @@ window.App = (function () {
       else render();
     });
 
-    if (!location.hash) location.hash = '#/equipos';
-    render();
+    S.cargarConSemilla(function () {
+      if (!location.hash) location.hash = '#/equipos';
+      render();
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);

@@ -2,6 +2,7 @@
 window.S = (function () {
 
   var KEY = 'anfa_torneo_v1';
+  var RESPALDO_INICIAL = 'datos/respaldo-tercera-division-2026.json';
 
   /* ============ catálogos fijos ============ */
 
@@ -177,6 +178,21 @@ window.S = (function () {
       U.toast('No se pudo guardar: almacenamiento lleno', 'err');
       return false;
     }
+  }
+
+  // Arranque de la app: si este navegador nunca guardó un torneo, precarga
+  // el respaldo de los 42 clubes (servido como archivo estático) para no
+  // depender de que cada dispositivo lo importe a mano desde Configuración.
+  function cargarConSemilla(cb) {
+    var yaHayDatos;
+    try { yaHayDatos = !!localStorage.getItem(KEY); } catch (e) { yaHayDatos = true; }
+    if (yaHayDatos) { load(); cb(); return; }
+
+    fetch(RESPALDO_INICIAL)
+      .then(function (r) { if (!r.ok) throw new Error('sin semilla'); return r.json(); })
+      .then(function (obj) { localStorage.setItem(KEY, JSON.stringify(obj)); })
+      .catch(function () { /* sin conexión o sin archivo: arranca vacío como antes */ })
+      .then(function () { load(); cb(); });
   }
 
   /* ============ accesores ============ */
@@ -528,7 +544,7 @@ window.S = (function () {
     equiposVisibles: equiposVisibles, partidosVisibles: partidosVisibles,
 
     get d() { return data; },
-    load: load, save: save,
+    load: load, save: save, cargarConSemilla: cargarConSemilla,
     cuerpoTecnicoVacio: cuerpoTecnicoVacio, convocatoriaVacia: convocatoriaVacia, timerVacio: timerVacio,
 
     equipo: equipo, nombreEquipo: nombreEquipo, partido: partido,
