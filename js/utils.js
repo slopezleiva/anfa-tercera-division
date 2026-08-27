@@ -63,11 +63,21 @@ window.U = (function () {
     return d.firstElementChild;
   }
 
+  // Delegación de eventos. Si se vuelve a registrar el mismo (evento + selector)
+  // sobre el mismo contenedor —típico al repintar una sección sin recrear su
+  // nodo raíz—, se reemplaza el handler anterior en lugar de apilar otro. Así
+  // "Guardar" en un panel no deja listeners duplicados que reabran el modal
+  // varias veces (el fondo queda más oscuro y hay que cerrarlo N veces).
   function on(root, sel, evt, fn) {
-    root.addEventListener(evt, function (e) {
+    var reg = root.__deleg || (root.__deleg = {});
+    var clave = evt + ' ' + sel;
+    if (reg[clave]) root.removeEventListener(evt, reg[clave]);
+    var handler = function (e) {
       var t = e.target.closest(sel);
       if (t && root.contains(t)) fn(e, t);
-    });
+    };
+    reg[clave] = handler;
+    root.addEventListener(evt, handler);
   }
 
   /* ---------- toast ---------- */
